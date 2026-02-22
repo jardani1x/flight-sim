@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@sim-core/*": ["src/sim-core/*"],
+      "@fdm-jsbsim/*": ["src/fdm-jsbsim/*"],
+      "@frames/*": ["src/frames/*"],
+      "@world-cesium/*": ["src/world-cesium/*"],
+      "@aircraft-render/*": ["src/aircraft-render/*"],
+      "@input/*": ["src/input/*"],
+      "@ui/*": ["src/ui/*"],
+      "@asset-pipeline/*": ["src/asset-pipeline/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
