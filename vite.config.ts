@@ -4,14 +4,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
     outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          cesium: ['cesium']
-        }
-      }
-    }
+    sourcemap: true
   },
   resolve: {
     alias: {
@@ -24,9 +17,6 @@ export default defineConfig({
       '@ui': '/src/ui',
       '@asset-pipeline': '/src/asset-pipeline'
     }
-  },
-  optimizeDeps: {
-    include: ['cesium']
   },
   server: {
     port: 3000,

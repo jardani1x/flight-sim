@@ -5,127 +5,111 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Massive Web Flight Simulator - A380</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; }
-    #flight-sim { width: 100%; height: 100%; position: relative; }
-    #cesium-container { width: 100%; height: 100%; background: #000; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    #flight-sim {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    
+    #cesium-container {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Loading overlay */
     .loading-overlay {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: #0a0a0a;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      transition: opacity 0.5s;
     }
-    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
-    .loading-title { color: #00ff88; font-size: 24px; margin-bottom: 10px; }
-    .loading-subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+    
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .loading-title {
+      color: #00ff88;
+      font-size: 24px;
+      font-weight: 300;
+      margin-bottom: 20px;
+      letter-spacing: 4px;
+    }
+    
+    .loading-subtitle {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+    
     .loading-spinner {
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       border: 3px solid #333;
       border-top-color: #00ff88;
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .cesium-viewer {
+      width: 100%;
+      height: 100%;
+    }
   </style>
-  
   <!-- CesiumJS -->
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/index-DAFV3Yst.js"></script>
 </head>
 <body>
   <div id="flight-sim">
     <div class="loading-overlay" id="loading">
       <div class="loading-title">MASSIVE FLIGHT SIM</div>
-      <div class="loading-subtitle" id="loading-status">Loading...</div>
+      <div class="loading-subtitle">A380 Cockpit Experience</div>
       <div class="loading-spinner"></div>
     </div>
     <div id="cesium-container"></div>
   </div>
   
+  <!-- Cesium ion token -->
   <script>
-    // Set Cesium token
     window.__CESIUM_ION_TOKEN__ = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZTVkZWJkZC1lMDdlLTQyYzMtYWIyNS01YmUzZTc4Y2JmMGIiLCJpZCI6MzkyOTEzLCJpYXQiOjE3NzE3MzAzNjh9.lNWe3qqelAGSjQAMwJv8jrHbdxKFmFYq7UB80y4O6CU';
-    
-    // Load app
-    async function init() {
-      const status = document.getElementById('loading-status');
-      
-      // Wait for Cesium
-      let attempts = 0;
-      while (typeof Cesium === 'undefined' && attempts < 50) {
-        await new Promise(r => setTimeout(r, 100));
-        attempts++;
-      }
-      
-      if (typeof Cesium === 'undefined') {
-        status.textContent = 'ERROR: Cesium failed to load!';
-        status.style.color = 'red';
-        return;
-      }
-      
-      status.textContent = 'Starting simulator...';
-      
-      // Set token
-      Cesium.Ion.defaultAccessToken = window.__CESIUM_ION_TOKEN__;
-      
-      try {
-        // Create Cesium viewer
-        const viewer = new Cesium.Viewer('cesium-container', {
-          terrainProvider: await Cesium.createWorldTerrain(),
-          baseLayerPicker: false,
-          geocoder: false,
-          homeButton: false,
-          sceneModePicker: false,
-          selectionIndicator: false,
-          timeline: false,
-          animation: false,
-          navigationHelpButton: false,
-          fullscreenButton: false,
-          infoBox: false,
-          shouldAnimate: true
-        });
-        
-        // Add aircraft entity (simple box for now)
-        const aircraft = viewer.entities.add({
-          position: Cesium.Cartesian3.fromDegrees(103.9915, 1.3644, 1000),
-          model: {
-            uri: 'https://cesium.com/public/Sandcastle/SampleData/models/CesiumAir/Cesium_Air.glb',
-            scale: 10
-          },
-          label: {
-            text: 'A380',
-            font: '16px sans-serif',
-            pixelOffset: new Cesium.Cartesian2(0, -50)
-          }
-        });
-        
-        // Fly to location
-        viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(103.9915, 1.3644, 5000),
-          orientation: {
-            heading: Cesium.Math.toRadians(90),
-            pitch: Cesium.Math.toRadians(-30),
-            roll: 0
-          }
-        });
-        
-        // Hide loading
+  </script>
+  
+  
+  <script>
+    // Hide loading when Cesium ready
+    window.addEventListener('load', () => {
+      setTimeout(() => {
         document.getElementById('loading').classList.add('hidden');
-        console.log('Flight sim initialized!');
-        
-      } catch (e) {
-        console.error(e);
-        status.textContent = 'Error: ' + e.message;
-        status.style.color = 'red';
-      }
-    }
-    
-    init();
+      }, 2000);
+    });
   </script>
 </body>
 </html>

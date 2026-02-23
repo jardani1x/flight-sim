@@ -93,8 +93,8 @@ export class FlightSimulator {
       height: this.config.initialPosition.altitude
     });
 
-    // Create F
-    const fdmConfig =DM config createA380Config(
+    // Create FDM config
+    const fdmConfig = createA380Config(
       initialEcef,
       this.config.initialHeading * Math.PI / 180
     );

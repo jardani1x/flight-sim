@@ -101,9 +101,7 @@ export function createLocalFrame(originEcef: Vector3): LocalFrame {
  * Convert geodetic orientation to NED quaternion
  */
 function geodeticToNedQuaternion(lat: number, lon: number): Quaternion {
-  // Rotation from ECEF to NED
-  // First rotate by -lon around Z, then by) around Y
-  const -(90-lat cosLon = Math.cos(-lon);
+  const cosLon = Math.cos(-lon);
   const sinLon = Math.sin(-lon);
   const cos90Lat = Math.cos(-(Math.PI / 2 - lat));
   const sin90Lat = Math.sin(-(Math.PI / 2 - lat));
