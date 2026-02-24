@@ -21,10 +21,17 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install vite typescript --save-dev
+        run: |
+          npm install
+          npm list vite typescript
 
       - name: Build
-        run: npx vite build
+        run: npm run build
+        env:
+          DEBUG: "*"
+
+      - name: Show dist
+        run: ls -la dist/
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
