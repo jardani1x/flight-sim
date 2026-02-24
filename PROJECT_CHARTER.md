@@ -100,15 +100,15 @@ src/
 
 ## 8. Milestone Plan
 
-| Milestone | Description | Acceptance Criteria |
-|-----------|-------------|---------------------|
-| M0 | Repo + Tooling | TS project, CI, test harness |
-| M1 | World + Aircraft | Cesium globe, A380 renders, chase camera |
-| M2 | Physics Core | Fixed timestep, JSBSim integration |
-| M3 | Controls + HUD | Desktop/mobile input, PFD display |
-| M4 | Asset Pipeline | GLB validation, LOD, compression |
-| M5 | Performance Tuning | Tier system, streaming config |
-| M6 (Optional) | Weather/Traffic | Post-M5 only |
+| Milestone | Description | Acceptance Criteria | Status |
+|-----------|-------------|---------------------|--------|
+| M0 | Repo + Tooling | TS project, CI, test harness | ✅ Done |
+| M1 | World + Aircraft | Cesium globe, A380 renders, chase camera | ✅ Done |
+| M2 | Physics Core | Fixed timestep, JSBSim integration | ✅ Done |
+| M3 | Controls + HUD | Desktop/mobile input, PFD display | ✅ Done |
+| M4 | Asset Pipeline | GLB validation, LOD, compression | ✅ Done |
+| M5 | Performance Tuning | Tier system, streaming config | 🔄 Partial |
+| M6 (Optional) | Weather/Traffic | Post-M5 only | ❌ Not started |
 
 ---
 
