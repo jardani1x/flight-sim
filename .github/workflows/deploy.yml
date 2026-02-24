@@ -15,11 +15,10 @@ jobs:
         with:
           node-version: 20
       
-      - name: Install
-        run: rm -f package-lock.json && npm install
-      
-      - name: Build
-        run: npm run build
+      - name: Install and Build
+        run: |
+          npm install vite typescript --save-dev
+          npx vite build
       
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
