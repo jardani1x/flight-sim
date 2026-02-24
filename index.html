@@ -1,945 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Untitled - Notepad</title>
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-:root {
-  --win-gray: #c0c0c0;
-  --win-dark: #808080;
-  --win-darker: #404040;
-  --win-light: #ffffff;
-  --win-lighter: #dfdfdf;
-  --win-blue: #000080;
-}
-
-body {
-  font-family: "MS Sans Serif", Tahoma, Verdana, sans-serif;
-  font-size: 11px;
-  background: #008080;
-  min-height: 100vh;
-  padding: 2px;
-}
-
-.window {
-  background: var(--win-gray);
-  border: 2px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  box-shadow: 1px 1px 0 var(--win-darker);
-  min-width: 400px;
-  max-width: 95vw;
-}
-
-.title-bar {
-  background: var(--win-blue);
-  color: white;
-  padding: 2px 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-  font-family: "MS Sans Serif", sans-serif;
-  font-size: 11px;
-}
-
-.title-bar-controls {
-  display: flex;
-  gap: 2px;
-}
-
-.title-bar-btn {
-  width: 16px;
-  height: 14px;
-  background: var(--win-gray);
-  border: 1px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.title-bar-btn:active {
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-}
-
-.menu-bar {
-  display: flex;
-  gap: 0;
-  padding: 2px 0;
-  background: var(--win-gray);
-}
-
-.menu-item {
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-.menu-item:hover {
-  background: var(--win-blue);
-  color: white;
-}
-
-.menu-item u {
-  text-decoration: none;
-}
-
-.menu-dropdown {
-  position: absolute;
-  background: var(--win-gray);
-  border: 2px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  display: none;
-  min-width: 150px;
-  z-index: 1000;
-}
-
-.menu-dropdown.show {
-  display: block;
-}
-
-.menu-dropdown-item {
-  padding: 3px 20px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-}
-
-.menu-dropdown-item:hover {
-  background: var(--win-blue);
-  color: white;
-}
-
-.menu-dropdown-item .shortcut {
-  color: var(--win-dark);
-  margin-left: 20px;
-}
-
-.menu-dropdown-item:hover .shortcut {
-  color: #ccc;
-}
-
-.menu-separator {
-  height: 1px;
-  background: var(--win-dark);
-  margin: 2px 4px;
-}
-
-.toolbar {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-bottom: 1px solid var(--win-dark);
-  background: var(--win-gray);
-}
-
-.toolbar-btn {
-  width: 24px;
-  height: 22px;
-  background: var(--win-gray);
-  border: 1px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.toolbar-btn:active {
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-}
-
-.toolbar-separator {
-  width: 1px;
-  background: var(--win-dark);
-  margin: 0 2px;
-}
-
-.editor-container {
-  padding: 2px;
-  background: var(--win-gray);
-}
-
-#editor {
-  width: 100%;
-  height: calc(100vh - 180px);
-  min-height: 300px;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 12px;
-  resize: none;
-  border: 2px solid;
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-  padding: 2px;
-  outline: none;
-  line-height: 1.2;
-}
-
-.status-bar {
-  display: flex;
-  border: 1px solid;
-  border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
-  margin-top: 2px;
-}
-
-.status-bar-section {
-  padding: 2px 8px;
-  border-right: 1px solid;
-  border-color: var(--win-dark);
-  flex: 1;
-  font-size: 11px;
-}
-
-.status-bar-section:last-child {
-  border-right: none;
-  flex: 2;
-  text-align: right;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.3);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.modal-overlay.show {
-  display: flex;
-}
-
-.modal {
-  background: var(--win-gray);
-  border: 2px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  padding: 2px;
-  min-width: 300px;
-}
-
-.modal-title {
-  background: var(--win-blue);
-  color: white;
-  padding: 2px 4px;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-content {
-  padding: 16px;
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.btn {
-  padding: 4px 16px;
-  background: var(--win-gray);
-  border: 2px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 11px;
-}
-
-.btn:active {
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-}
-
-.btn-primary {
-  background: var(--win-gray);
-}
-
-.input-field {
-  width: 100%;
-  padding: 2px 4px;
-  border: 2px solid;
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-  font-family: inherit;
-  font-size: 11px;
-  margin-top: 4px;
-}
-
-label {
-  display: block;
-  margin-top: 8px;
-  margin-bottom: 2px;
-}
-
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 8px 0;
-}
-
-.checkbox-group input {
-  width: 13px;
-  height: 13px;
-}
-
-.about-content {
-  text-align: center;
-  padding: 8px;
-}
-
-.about-content h2 {
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-
-.about-content p {
-  margin: 4px 0;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Flight Simulator - A380</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { 
+      width: 100vw !important; height: 100vh !important; 
+      overflow: hidden !important; background: #000; font-family: monospace;
+    }
+    #cesium-container { 
+      width: 100vw !important; height: 100vh !important; 
+      position: fixed !important; top: 0 !important; left: 0 !important;
+    }
+    .cesium-viewer, .cesium-widget, canvas { width: 100vw !important; height: 100vh !important; }
+    .loading {
+      position: fixed; top: 0; left: 0; right: 0; bottom:0;
+      background: linear-gradient(135deg,#0a0a0a,#1a1a2e);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; color: #00ff88; font-size: 20px;
+    }
+    .loading.hidden { display: none; }
+    .hud {
+      position: fixed; top: 20px; left: 20px;
+      background: rgba(0,0,0,0.85); color: #00ff88; padding: 15px;
+      border-radius: 8px; z-index: 100; min-width: 200px;
+    }
+    .hud div { margin: 4px 0; display: flex; justify-content: space-between; }
+    .hud span { color: #fff; }
+    .controls {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: #888; padding: 10px 20px;
+      border-radius: 20px; z-index: 100; font-size: 12px;
+    }
+    .pfd {
+      position: fixed; bottom: 20px; right: 20px;
+      width: 180px; height: 180px;
+      background: rgba(0,20,0,0.9); border: 2px solid #00ff88; border-radius: 50%;
+      z-index: 100;
+    }
+    .pfd canvas { width: 100%; height: 100%; border-radius: 50%; }
+    .touch-left, .touch-right {
+      position: fixed; bottom: 30px; width: 120px; height: 120px;
+      background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3);
+      z-index: 200; display: none;
+    }
+    .touch-left { left: 30px; }
+    .touch-right { right: 30px; }
+    .touch-knob {
+      position: absolute; top: 50%; left: 50%; width: 50px; height: 50px;
+      background: rgba(0,255,0,0.5); border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    @media (pointer: coarse) {
+      .hud { top: 20px; left: 20px; right: auto; font-size: 12px; padding: 10px; min-width: 150px; }
+      .pfd { top: 20px; right: 20px; bottom: auto; width: 100px !important; height: 100px !important; }
+      .pfd canvas { width: 100px !important; height: 100px !important; }
+      .touch-left, .touch-right { display: block; width: 100px; height: 100px; }
+      .touch-left { bottom: 30px; left: 20px; }
+      .touch-right { bottom: 30px; right: 20px; }
+      .touch-knob { width: 40px; height: 40px; }
+      .controls { display: none; }
+    }
+    @media (pointer: fine) {
+      .pfd { bottom: 20px; right: 20px; }
+      .hud { top: 20px; left: 20px; }
+    }
+  </style>
 </head>
 <body>
-<div class="window">
-  <div class="title-bar">
-    <span id="title">Untitled - Notepad</span>
-    <div class="title-bar-controls">
-      <div class="title-bar-btn" id="btn-minimize">_</div>
-      <div class="title-bar-btn" id="btn-maximize">□</div>
-      <div class="title-bar-btn" id="btn-close">×</div>
-    </div>
+  <div class="loading" id="loading">Flight Sim - Loading...</div>
+  <div id="cesium-container"></div>
+  
+  <div class="hud">
+    <div>FPS: <span id="fps">--</span></div>
+    <div>POS: <span id="pos">--</span></div>
+    <div>HDG: <span id="hdg">--</span>°</div>
+    <div>ALT: <span id="alt">--</span></div>
+    <div>SPD: <span id="spd">--</span></div>
+    <div>V/S: <span id="vs">--</span></div>
+    <div>THR: <span id="thr">--</span>%</div>
+    <div style="color:#888;margin-top:8px">MODE: <span id="mode">KEY</span></div>
   </div>
   
-  <div class="menu-bar">
-    <div class="menu-item" data-menu="file">File</div>
-    <div class="menu-item" data-menu="edit">Edit</div>
-    <div class="menu-item" data-menu="format">Format</div>
-    <div class="menu-item" data-menu="view">View</div>
-    <div class="menu-item" data-menu="help">Help</div>
-  </div>
+  <div class="pfd"><canvas id="pfd-canvas" width="180" height="180"></canvas></div>
   
-  <div id="file-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="new"><span>New</span><span class="shortcut">Ctrl+N</span></div>
-    <div class="menu-dropdown-item" data-action="open"><span>Open...</span><span class="shortcut">Ctrl+O</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="save"><span>Save</span><span class="shortcut">Ctrl+S</span></div>
-    <div class="menu-dropdown-item" data-action="saveas"><span>Save As...</span><span class="shortcut">Ctrl+Shift+S</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="page-setup"><span>Page Setup...</span></div>
-    <div class="menu-dropdown-item" data-action="print"><span>Print...</span><span class="shortcut">Ctrl+P</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="exit"><span>Exit</span></div>
-  </div>
+  <div class="touch-left" id="touch-left"><div class="touch-knob" id="knob-left"></div></div>
+  <div class="touch-right" id="touch-right"><div class="touch-knob" id="knob-right"></div></div>
   
-  <div id="edit-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="undo"><span>Undo</span><span class="shortcut">Ctrl+Z</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="cut"><span>Cut</span><span class="shortcut">Ctrl+X</span></div>
-    <div class="menu-dropdown-item" data-action="copy"><span>Copy</span><span class="shortcut">Ctrl+C</span></div>
-    <div class="menu-dropdown-item" data-action="paste"><span>Paste</span><span class="shortcut">Ctrl+V</span></div>
-    <div class="menu-dropdown-item" data-action="delete"><span>Delete</span><span class="shortcut">Del</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="select-all"><span>Select All</span><span class="shortcut">Ctrl+A</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="find"><span>Find...</span><span class="shortcut">Ctrl+F</span></div>
-    <div class="menu-dropdown-item" data-action="find-next"><span>Find Next</span><span class="shortcut">F3</span></div>
-    <div class="menu-dropdown-item" data-action="replace"><span>Replace...</span><span class="shortcut">Ctrl+H</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="go"><span>Go To...</span><span class="shortcut">Ctrl+G</span></div>
-  </div>
-  
-  <div id="format-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="word-wrap"><span id="wrap-check">☑</span> Word Wrap</div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="font"><span>Font...</span></div>
-  </div>
-  
-  <div id="view-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="status-bar"><span id="status-check">☑</span> Status Bar</div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="toolbar"><span id="toolbar-check">☑</span> Toolbar</div>
-  </div>
-  
-  <div id="help-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="help"><span>Help Topics</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="about"><span>About Notepad</span></div>
-  </div>
-  
-  <div class="toolbar">
-    <div class="toolbar-btn" data-action="new" title="New (Ctrl+N)">📄</div>
-    <div class="toolbar-btn" data-action="open" title="Open (Ctrl+O)">📂</div>
-    <div class="toolbar-btn" data-action="save" title="Save (Ctrl+S)">💾</div>
-    <div class="toolbar-separator"></div>
-    <div class="toolbar-btn" data-action="cut" title="Cut (Ctrl+X)">✂️</div>
-    <div class="toolbar-btn" data-action="copy" title="Copy (Ctrl+C)">📋</div>
-    <div class="toolbar-btn" data-action="paste" title="Paste (Ctrl+V)">📌</div>
-    <div class="toolbar-separator"></div>
-    <div class="toolbar-btn" data-action="find" title="Find (Ctrl+F)">🔍</div>
-    <div class="toolbar-btn" data-action="replace" title="Replace (Ctrl+H)">🔁</div>
-  </div>
-  
-  <div class="editor-container">
-    <textarea id="editor" placeholder=""></textarea>
-  </div>
-  
-  <div class="status-bar" id="status-bar">
-    <div class="status-bar-section" id="status-line">Ln 1, Col 1</div>
-    <div class="status-bar-section" id="status-encoding">UTF-8</div>
-    <div class="status-bar-section" id="status-format">Windows (CRLF)</div>
-  </div>
-</div>
+  <div class="controls">W/S=Thr | A/D=Roll | Arrows=Pitch/Turn | Q/E=Throttle</div>
 
-<!-- Find/Replace Dialog -->
-<div id="find-dialog" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span>Find</span>
-      <div class="title-bar-btn" onclick="closeFindDialog()">×</div>
-    </div>
-    <div class="modal-content">
-      <label>Find what:</label>
-      <input type="text" id="find-text" class="input-field">
-      <div class="modal-buttons">
-        <button class="btn" onclick="findNext()">Find Next</button>
-        <button class="btn" onclick="closeFindDialog()">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="replace-dialog" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span>Replace</span>
-      <div class="title-bar-btn" onclick="closeReplaceDialog()">×</div>
-    </div>
-    <div class="modal-content">
-      <label>Find what:</label>
-      <input type="text" id="replace-find" class="input-field">
-      <label>Replace with:</label>
-      <input type="text" id="replace-with" class="input-field">
-      <div class="modal-buttons">
-        <button class="btn" onclick="replaceNext()">Replace</button>
-        <button class="btn" onclick="replaceAll()">Replace All</button>
-        <button class="btn" onclick="closeReplaceDialog()">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- About Dialog -->
-<div id="about-dialog" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span>About Notepad</span>
-      <div class="title-bar-btn" onclick="closeAboutDialog()">×</div>
-    </div>
-    <div class="modal-content">
-      <div class="about-content">
-        <h2>Notepad</h2>
-        <p>Windows 95/98 Style Notepad</p>
-        <p>Version 1.0</p>
-        <p style="margin-top: 16px; color: #666;">A nostalgic notepad web app</p>
-      </div>
-      <div class="modal-buttons">
-        <button class="btn" onclick="closeAboutDialog()">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Font Dialog -->
-<div id="font-dialog" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span>Font</span>
-      <div class="title-bar-btn" onclick="closeFontDialog()">×</div>
-    </div>
-    <div class="modal-content">
-      <label>Font:</label>
-      <select id="font-family" class="input-field">
-        <option value="Courier New">Courier New</option>
-        <option value="Consolas">Consolas</option>
-        <option value="Lucida Console">Lucida Console</option>
-        <option value="Monaco">Monaco</option>
-      </select>
-      <label>Size:</label>
-      <select id="font-size" class="input-field">
-        <option value="8">8</option>
-        <option value="10">10</option>
-        <option value="12" selected>12</option>
-        <option value="14">14</option>
-        <option value="16">16</option>
-        <option value="18">18</option>
-        <option value="24">24</option>
-      </select>
-      <div class="modal-buttons">
-        <button class="btn" onclick="applyFont()">OK</button>
-        <button class="btn" onclick="closeFontDialog()">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-let currentFile = null;
-let isModified = false;
-let wordWrap = true;
-let showStatusBar = true;
-let showToolbar = true;
-
-// Editor element
-const editor = document.getElementById('editor');
-const titleEl = document.getElementById('title');
-const statusLine = document.getElementById('status-line');
-const statusEncoding = document.getElementById('status-encoding');
-const statusFormat = document.getElementById('status-format');
-const wrapCheck = document.getElementById('wrap-check');
-const statusCheck = document.getElementById('status-check');
-const toolbarCheck = document.getElementById('toolbar-check');
-const toolbar = document.querySelector('.toolbar');
-const statusBar = document.getElementById('status-bar');
-
-// Menu handling
-let activeMenu = null;
-
-document.querySelectorAll('.menu-item').forEach(item => {
-  item.addEventListener('click', (e) => {
-    const menuId = item.dataset.menu;
-    const menu = document.getElementById(menuId + '-menu');
+  <script>
+    const CESIUM_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZTVkZWJkZC1lMDdlLTQyYzMtYWIyNS01YmUzZTc4Y2JmMGIiLCJpZCI6MzkyOTEzLCJpYXQiOjE3NzE3MzAzNjh9.lNWe3qqelAGSjQAMwJv8jrHbdxKFmFYq7UB80y4O6CU';
     
-    if (activeMenu === menu) {
-      closeMenu();
-    } else {
-      closeMenu();
-      const rect = item.getBoundingClientRect();
-      menu.style.left = rect.left + 'px';
-      menu.style.top = (rect.top + rect.height) + 'px';
-      menu.classList.add('show');
-      activeMenu = menu;
+    const A380 = { mass: 276800, wingArea: 845, maxThrust: 1424000, maxRollRate: 14, maxPitchRate: 4.5, maxBank: 35, maxPitch: 20, stallSpeed: 70 };
+    
+    const state = { lon: 103.9915, lat: 1.3644, alt: 500, heading: 90, pitch: 0, roll: 0, speed: 150, throttle: 0.5, verticalSpeed: 0 };
+    const controls = { aileron: 0, elevator: 0, targetAileron: 0, targetElevator: 0 };
+    const CONTROL_LAG = 3.0;
+    
+    const keys = {};
+    let controlMode = 'KEY';
+    
+    document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'KeyQ') state.throttle = Math.min(1, state.throttle + 0.02); if (e.code === 'KeyE') state.throttle = Math.max(0, state.throttle - 0.02); });
+    document.addEventListener('keyup', e => keys[e.code] = false);
+    
+    window.addEventListener('gamepadconnected', () => controlMode = 'GAMEPAD');
+    window.addEventListener('gamepaddisconnected', () => controlMode = 'KEY');
+    
+    const touchState = { left: {x:0,y:0}, right: {x:0,y:0} };
+    function setupTouch() {
+      const left = document.getElementById('touch-left'), right = document.getElementById('touch-right');
+      const kLeft = document.getElementById('knob-left'), kRight = document.getElementById('knob-right');
+      let leftId, rightId;
+      left.addEventListener('touchstart', e => { leftId = e.changedTouches[0].identifier; controlMode = 'TOUCH'; });
+      left.addEventListener('touchmove', e => { for (let t of e.changedTouches) if (t.identifier === leftId) { const r = left.getBoundingClientRect(); touchState.left.x = Math.max(-1, Math.min(1, (t.clientX - r.left - 60) / 40)); touchState.left.y = Math.max(-1, Math.min(1, (t.clientY - r.top - 60) / 40)); kLeft.style.transform = 'translate(calc(-50% + ' + (touchState.left.x*25) + 'px), calc(-50% + ' + (touchState.left.y*25) + 'px))'; } });
+      left.addEventListener('touchend', e => { for (let t of e.changedTouches) if (t.identifier === leftId) { touchState.left = {x:0,y:0}; kLeft.style.transform = 'translate(-50%,-50%)'; } });
+      right.addEventListener('touchstart', e => { rightId = e.changedTouches[0].identifier; controlMode = 'TOUCH'; });
+      right.addEventListener('touchmove', e => { for (let t of e.changedTouches) if (t.identifier === rightId) { const r = right.getBoundingClientRect(); touchState.right.x = Math.max(-1, Math.min(1, (t.clientX - r.left - 60) / 40)); touchState.right.y = Math.max(-1, Math.min(1, (t.clientY - r.top - 60) / 40)); kRight.style.transform = 'translate(calc(-50% + ' + (touchState.right.x*25) + 'px), calc(-50% + ' + (touchState.right.y*25) + 'px))'; } });
+      right.addEventListener('touchend', e => { for (let t of e.changedTouches) if (t.identifier === rightId) { touchState.right = {x:0,y:0}; kRight.style.transform = 'translate(-50%,-50%)'; } });
     }
-    e.stopPropagation();
-  });
-});
-
-function closeMenu() {
-  document.querySelectorAll('.menu-dropdown').forEach(m => m.classList.remove('show'));
-  activeMenu = null;
-}
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.menu-bar')) {
-    closeMenu();
-  }
-});
-
-// Menu actions
-document.querySelectorAll('.menu-dropdown-item').forEach(item => {
-  item.addEventListener('click', () => {
-    const action = item.dataset.action;
-    handleAction(action);
-    closeMenu();
-  });
-});
-
-function handleAction(action) {
-  switch(action) {
-    case 'new':
-      newFile();
-      break;
-    case 'open':
-      openFile();
-      break;
-    case 'save':
-      saveFile();
-      break;
-    case 'saveas':
-      saveFileAs();
-      break;
-    case 'exit':
-      if (confirmExit()) window.close();
-      break;
-    case 'undo':
-      document.execCommand('undo');
-      break;
-    case 'cut':
-      document.execCommand('cut');
-      break;
-    case 'copy':
-      document.execCommand('copy');
-      break;
-    case 'paste':
-      document.execCommand('paste');
-      break;
-    case 'delete':
-      document.execCommand('delete');
-      break;
-    case 'select-all':
-      editor.select();
-      break;
-    case 'find':
-      showFindDialog();
-      break;
-    case 'replace':
-      showReplaceDialog();
-      break;
-    case 'find-next':
-      findNext();
-      break;
-    case 'word-wrap':
-      wordWrap = !wordWrap;
-      editor.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
-      wrapCheck.textContent = wordWrap ? '☑' : '☐';
-      break;
-    case 'font':
-      showFontDialog();
-      break;
-    case 'status-bar':
-      showStatusBar = !showStatusBar;
-      statusBar.style.display = showStatusBar ? 'flex' : 'none';
-      statusCheck.textContent = showStatusBar ? '☑' : '☐';
-      resizeEditor();
-      break;
-    case 'toolbar':
-      showToolbar = !showToolbar;
-      toolbar.style.display = showToolbar ? 'flex' : 'none';
-      toolbarCheck.textContent = showToolbar ? '☑' : '☐';
-      resizeEditor();
-      break;
-    case 'about':
-      showAboutDialog();
-      break;
-    case 'page-setup':
-      alert('Page Setup - Feature not implemented in web version');
-      break;
-    case 'print':
-      window.print();
-      break;
-    case 'go':
-      goToLine();
-      break;
-  }
-}
-
-// Toolbar button actions
-document.querySelectorAll('.toolbar-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const action = btn.dataset.action;
-    handleAction(action);
-  });
-});
-
-// Window controls
-document.getElementById('btn-close').addEventListener('click', () => {
-  if (confirmExit()) window.close();
-});
-
-document.getElementById('btn-minimize').addEventListener('click', () => {
-  document.body.style.display = 'none';
-  setTimeout(() => document.body.style.display = 'block', 100);
-});
-
-document.getElementById('btn-maximize').addEventListener('click', () => {
-  const win = document.querySelector('.window');
-  if (win.style.width === '100%') {
-    win.style.width = '';
-    win.style.maxWidth = '95vw';
-  } else {
-    win.style.width = '100%';
-    win.style.maxWidth = '100%';
-  }
-  resizeEditor();
-});
-
-// File operations
-function newFile() {
-  if (isModified && !confirm('Do you want to save changes?')) return;
-  editor.value = '';
-  currentFile = null;
-  isModified = false;
-  updateTitle();
-}
-
-function openFile() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.txt,.md,.js,.html,.css,.json,.xml,.log';
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        editor.value = ev.target.result;
-        currentFile = file.name;
-        isModified = false;
-        updateTitle();
-        updateStatus();
-      };
-      reader.readAsText(file);
-    }
-  };
-  input.click();
-}
-
-function saveFile() {
-  if (currentFile) {
-    downloadFile(editor.value, currentFile);
-    isModified = false;
-    updateTitle();
-  } else {
-    saveFileAs();
-  }
-}
-
-function saveFileAs() {
-  const filename = prompt('Enter file name:', currentFile || 'untitled.txt');
-  if (filename) {
-    downloadFile(editor.value, filename);
-    currentFile = filename;
-    isModified = false;
-    updateTitle();
-  }
-}
-
-function downloadFile(content, filename) {
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function confirmExit() {
-  if (isModified) {
-    return confirm('Do you want to save changes?');
-  }
-  return true;
-}
-
-// Editor events
-editor.addEventListener('input', () => {
-  if (!isModified) {
-    isModified = true;
-    updateTitle();
-  }
-  updateStatus();
-});
-
-editor.addEventListener('keyup', updateStatus);
-editor.addEventListener('click', updateStatus);
-
-function updateTitle() {
-  const name = currentFile || 'Untitled';
-  const modified = isModified ? '*' : '';
-  titleEl.textContent = `${modified}${name} - Notepad`;
-}
-
-function updateStatus() {
-  const text = editor.value;
-  const pos = editor.selectionStart;
-  const lines = text.substr(0, pos).split('\n');
-  const line = lines.length;
-  const col = lines[lines.length - 1].length + 1;
-  
-  statusLine.textContent = `Ln ${line}, Col ${col}`;
-  
-  // Update char count
-  const chars = text.length;
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  statusFormat.textContent = `${chars} chars, ${words} words`;
-}
-
-// Dialog functions
-function showFindDialog() {
-  document.getElementById('find-dialog').classList.add('show');
-  document.getElementById('find-text').focus();
-}
-
-function closeFindDialog() {
-  document.getElementById('find-dialog').classList.remove('show');
-}
-
-function showReplaceDialog() {
-  document.getElementById('replace-dialog').classList.add('show');
-  document.getElementById('replace-find').focus();
-}
-
-function closeReplaceDialog() {
-  document.getElementById('replace-dialog').classList.remove('show');
-}
-
-function showAboutDialog() {
-  document.getElementById('about-dialog').classList.add('show');
-}
-
-function closeAboutDialog() {
-  document.getElementById('about-dialog').classList.remove('show');
-}
-
-function showFontDialog() {
-  document.getElementById('font-dialog').classList.add('show');
-}
-
-function closeFontDialog() {
-  document.getElementById('font-dialog').classList.remove('show');
-}
-
-function applyFont() {
-  const font = document.getElementById('font-family').value;
-  const size = document.getElementById('font-size').value;
-  editor.style.fontFamily = font;
-  editor.style.fontSize = size + 'px';
-  closeFontDialog();
-}
-
-function findNext() {
-  const searchText = document.getElementById('find-text').value || document.getElementById('replace-find').value;
-  if (!searchText) return;
-  
-  const content = editor.value;
-  const pos = editor.selectionStart;
-  const found = content.indexOf(searchText, pos);
-  
-  if (found !== -1) {
-    editor.focus();
-    editor.setSelectionRange(found, found + searchText.length);
-  } else {
-    // Wrap around
-    const wrapped = content.indexOf(searchText);
-    if (wrapped !== -1) {
-      editor.focus();
-      editor.setSelectionRange(wrapped, wrapped + searchText.length);
-    } else {
-      alert('Cannot find "' + searchText + '"');
-    }
-  }
-}
-
-function replaceNext() {
-  const findText = document.getElementById('replace-find').value;
-  const replaceText = document.getElementById('replace-with').value;
-  
-  if (editor.selectionStart !== editor.selectionEnd) {
-    editor.setValue(editor.value.substr(0, editor.selectionStart) + replaceText + editor.value.substr(editor.selectionEnd));
-    isModified = true;
-    updateTitle();
-  }
-  findNext();
-}
-
-function replaceAll() {
-  const findText = document.getElementById('replace-find').value;
-  const replaceText = document.getElementById('replace-with').value;
-  
-  if (findText) {
-    editor.value = editor.value.split(findText).join(replaceText);
-    isModified = true;
-    updateTitle();
-    closeReplaceDialog();
-  }
-}
-
-function goToLine() {
-  const lineNum = prompt('Enter line number:', '1');
-  if (lineNum) {
-    const lines = editor.value.split('\n');
-    const num = parseInt(lineNum);
-    if (num > 0 && num <= lines.length) {
-      let pos = 0;
-      for (let i = 0; i < num - 1; i++) {
-        pos += lines[i].length + 1;
+    setupTouch();
+    
+    let frameCount = 0, lastFpsTime = performance.now();
+    
+    function update(dt) {
+      controls.targetAileron = 0;
+      controls.targetElevator = 0;
+      
+      if (keys['KeyA'] || keys['ArrowLeft']) controls.targetAileron = -1;
+      if (keys['KeyD'] || keys['ArrowRight']) controls.targetAileron = 1;
+      if (keys['KeyW'] || keys['ArrowUp']) controls.targetElevator = -1;
+      if (keys['KeyS'] || keys['ArrowDown']) controls.targetElevator = 1;
+      
+      const smoothing = 1 - Math.exp(-dt * CONTROL_LAG);
+      controls.aileron += (controls.targetAileron - controls.aileron) * smoothing;
+      controls.elevator += (controls.targetElevator - controls.elevator) * smoothing;
+      
+      const speedFactor = Math.min(1, Math.max(0.1, (state.speed - A380.stallSpeed) / 100));
+      
+      const rollRate = controls.aileron * A380.maxRollRate * speedFactor;
+      state.roll += rollRate * dt * Math.PI / 180;
+      state.roll = Math.max(-A380.maxBank * Math.PI / 180, Math.min(A380.maxBank * Math.PI / 180, state.roll));
+      
+      const pitchRate = controls.elevator * A380.maxPitchRate * speedFactor;
+      state.pitch += pitchRate * dt * Math.PI / 180;
+      state.pitch = Math.max(-A380.maxPitch * Math.PI / 180, Math.min(A380.maxPitch * Math.PI / 180, state.pitch));
+      
+      if (state.speed > A380.stallSpeed) {
+        const bankAngle = state.roll;
+        const turnRateFromBank = (9.81 * Math.tan(bankAngle)) / state.speed;
+        state.heading += turnRateFromBank * 180 / Math.PI * dt;
       }
-      editor.focus();
-      editor.setSelectionRange(pos, pos);
-    } else {
-      alert('Line number out of range');
+      
+      const thrust = state.throttle * A380.maxThrust;
+      const drag = 0.015 * state.speed * state.speed;
+      const acceleration = (thrust - drag) / A380.mass;
+      state.speed += acceleration * dt;
+      state.speed = Math.max(A380.stallSpeed / 2, Math.min(350, state.speed));
+      
+      const verticalFromPitch = state.speed * Math.sin(state.pitch);
+      const verticalFromThrust = (state.throttle - 0.5) * 30;
+      state.verticalSpeed = verticalFromPitch + verticalFromThrust;
+      state.alt += state.verticalSpeed * dt;
+      state.alt = Math.max(50, state.alt);
+      
+      const headingRad = state.heading * Math.PI / 180;
+      const groundSpeed = state.speed * Math.cos(state.pitch);
+      const speedDeg = groundSpeed / 111320;
+      
+      state.lon += Math.sin(headingRad) * speedDeg * dt;
+      state.lat += Math.cos(headingRad) * speedDeg * dt;
+      
+      document.getElementById('pos').textContent = state.lon.toFixed(4) + ',' + state.lat.toFixed(4) + ',' + state.alt.toFixed(0) + 'm';
+      document.getElementById('hdg').textContent = ((state.heading % 360 + 360) % 360).toFixed(0) + '°';
+      document.getElementById('spd').textContent = state.speed.toFixed(0) + ' m/s';
+      document.getElementById('alt').textContent = state.alt.toFixed(0) + ' m';
+      document.getElementById('vs').textContent = (state.verticalSpeed > 0 ? '+' : '') + state.verticalSpeed.toFixed(0) + ' m/s';
+      document.getElementById('thr').textContent = (state.throttle * 100).toFixed(0);
+      document.getElementById('mode').textContent = controlMode;
+      
+      frameCount++;
+      const now = performance.now();
+      if (now - lastFpsTime >= 1000) { document.getElementById('fps').textContent = frameCount; frameCount = 0; lastFpsTime = now; }
     }
-  }
-}
-
-function resizeEditor() {
-  const win = document.querySelector('.window');
-  const availableHeight = window.innerHeight - win.offsetTop - 4;
-  const titleBar = document.querySelector('.title-bar').offsetHeight;
-  const menuBar = document.querySelector('.menu-bar').offsetHeight;
-  const toolbarHeight = showToolbar ? document.querySelector('.toolbar').offsetHeight : 0;
-  const statusHeight = showStatusBar ? document.querySelector('.status-bar').offsetHeight : 0;
-  const padding = 10;
-  
-  editor.style.height = (availableHeight - titleBar - menuBar - toolbarHeight - statusHeight - padding) + 'px';
-}
-
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey) {
-    switch(e.key.toLowerCase()) {
-      case 'n':
-        e.preventDefault();
-        newFile();
-        break;
-      case 'o':
-        e.preventDefault();
-        openFile();
-        break;
-      case 's':
-        e.preventDefault();
-        if (e.shiftKey) {
-          saveFileAs();
-        } else {
-          saveFile();
-        }
-        break;
-      case 'f':
-        e.preventDefault();
-        showFindDialog();
-        break;
-      case 'h':
-        e.preventDefault();
-        showReplaceDialog();
-        break;
-      case 'a':
-        e.preventDefault();
-        editor.select();
-        break;
-      case 'z':
-        // Undo is handled by browser
-        break;
+    
+    function drawPFD() {
+      const c = document.getElementById('pfd-canvas');
+      const ctx = c.getContext('2d');
+      const w = 180, h = 180, cx = w/2, cy = h/2;
+      ctx.fillStyle = '#001a00';
+      ctx.fillRect(0,0,w,h);
+      const pitchScale = 3;
+      ctx.strokeStyle = '#00ff88';
+      ctx.lineWidth = 1;
+      for (let p = -90; p <= 90; p += 10) {
+        const y = cy - (state.pitch * 180 / Math.PI - p) * pitchScale;
+        if (y > 10 && y < h-10) { const lw = p === 0 ? 50 : p % 30 === 0 ? 35 : 20; ctx.beginPath(); ctx.moveTo(cx-lw,y); ctx.lineTo(cx+lw,y); ctx.stroke(); }
+      }
+      ctx.save(); ctx.translate(cx,25); ctx.rotate(-state.roll);
+      ctx.fillStyle = '#00ff88'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-10,-12); ctx.lineTo(10,-12); ctx.closePath(); ctx.fill(); ctx.restore();
+      ctx.fillStyle = '#ff0';
+      ctx.beginPath(); ctx.moveTo(cx-15,cy); ctx.lineTo(cx+15,cy); ctx.lineTo(cx,cy-10); ctx.lineTo(cx,cy+10); ctx.fill();
+      ctx.fillStyle = '#00ff88';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(((state.heading % 360 + 360) % 360).toFixed(0) + '°', cx, h-10);
     }
-  }
-  
-  if (e.key === 'F3') {
-    e.preventDefault();
-    findNext();
-  }
-});
-
-// Window resize
-window.addEventListener('resize', resizeEditor);
-
-// Initialize
-updateTitle();
-updateStatus();
-resizeEditor();
-
-// Set initial word wrap
-editor.style.whiteSpace = 'pre-wrap';
-</script>
-
+    
+    async function init() {
+      Cesium.Ion.defaultAccessToken = CESIUM_TOKEN;
+      document.body.style.margin = '0';
+      const viewer = new Cesium.Viewer('cesium-container', { terrainProvider: await Cesium.createWorldTerrainAsync(), baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false, selectionIndicator: false, timeline: false, animation: false, navigationHelpButton: false, fullscreenButton: false, infoBox: false, shouldAnimate: false });
+      const aircraft = viewer.entities.add({ position: Cesium.Cartesian3.fromDegrees(state.lon, state.lat, state.alt), model: { uri: 'https://cesium.com/public/Sandcastle/SampleData/models/CesiumAir/Cesium_Air.glb', scale: 50 }, label: { text: '✈️ A380', font: '24px sans-serif', fillColor: Cesium.Color.YELLOW, pixelOffset: new Cesium.Cartesian2(0,-60) }, point: { pixelSize: 15, color: Cesium.Color.RED } });
+      viewer.entities.add({ position: Cesium.Cartesian3.fromDegrees(103.9915, 1.3644, 0), point: { pixelSize: 12, color: Cesium.Color.CYAN }, label: { text: '🛫 Singapore', font: '16px sans-serif' } });
+      document.getElementById('loading').classList.add('hidden');
+      let last = performance.now();
+      function loop() {
+        const now = performance.now();
+        const dt = Math.min((now - last) / 1000, 0.1);
+        last = now;
+        update(dt);
+        aircraft.position = Cesium.Cartesian3.fromDegrees(state.lon, state.lat, state.alt);
+        aircraft.orientation = Cesium.Transforms.headingPitchRollQuaternion(Cesium.Cartesian3.fromDegrees(state.lon, state.lat, state.alt), new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(state.heading), state.pitch, state.roll));
+        const h = state.heading * Math.PI/180;
+        viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(state.lon - Math.sin(h)*0.02, state.lat - Math.cos(h)*0.02, state.alt + 300), orientation: { heading: Cesium.Math.toRadians(state.heading), pitch: Cesium.Math.toRadians(-15 + state.pitch * 30), roll: state.roll * 0.5 } });
+        drawPFD();
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+    init();
+  </script>
 </body>
 </html>
