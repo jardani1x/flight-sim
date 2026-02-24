@@ -1,41 +1,16 @@
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: [master]
-  workflow_dispatch:
-
+name: Deploy
+on: [push]
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install dependencies
-        run: |
-          npm install
-          npm list vite typescript
-
-      - name: Build
-        run: npm run build
-        env:
-          DEBUG: "*"
-
-      - name: Show dist
-        run: ls -la dist/
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+      - run: npm install
+      - run: npm run build
+      - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          force_orphan: true
