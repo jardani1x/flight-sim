@@ -12,37 +12,66 @@
       width: 100vw !important; height: 100vh !important; 
       overflow: hidden !important; background: #000; font-family: monospace;
     }
-    #cesium-container { 
-      width: 100vw !important; height: 100vh !important; 
-      position: fixed !important; top: 0 !important; left: 0 !important;
-    }
+    #cesium-container { width: 100vw !important; height: 100vh !important; position: fixed !important; }
     .cesium-viewer, .cesium-widget, canvas { width: 100vw !important; height: 100vh !important; }
+    
     .loading {
-      position: fixed; top: 0; left: 0; right: 0; bottom:0;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: linear-gradient(135deg,#0a0a0a,#1a1a2e);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 9999; color: #00ff88; font-size: 20px;
     }
     .loading.hidden { display: none; }
+    
+    /* HUD Styling - MSFS Style */
     .hud {
       position: fixed; top: 20px; left: 20px;
       background: rgba(0,0,0,0.85); color: #00ff88; padding: 15px;
-      border-radius: 8px; z-index: 100; min-width: 200px;
+      border-radius: 8px; z-index: 100; min-width: 220px;
+      font-family: 'Consolas', 'Monaco', monospace;
     }
-    .hud div { margin: 4px 0; display: flex; justify-content: space-between; }
+    .hud-title { color: #ffaa00; font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+    .hud div { margin: 4px 0; display: flex; justify-content: space-between; font-size: 13px; }
     .hud span { color: #fff; }
+    .hud .warning { color: #ff3333; animation: blink 0.5s infinite; }
+    .hud .good { color: #00ff88; }
+    
+    @keyframes blink { 50% { opacity: 0.5; } }
+    
+    /* Primary Flight Display */
+    .pfd {
+      position: fixed; bottom: 20px; right: 20px;
+      width: 240px; height: 240px;
+      background: rgba(0,20,0,0.92); border: 3px solid #00ff88; border-radius: 50%;
+      z-index: 100;
+    }
+    .pfd canvas { width: 100%; height: 100%; border-radius: 50%; }
+    
+    /* Throttle Display */
+    .throttle-bar {
+      position: fixed; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 30px; height: 200px;
+      background: rgba(0,0,0,0.85); border: 2px solid #444;
+      border-radius: 5px; z-index: 100;
+    }
+    .throttle-fill {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to top, #ff6600, #ffcc00);
+      transition: height 0.1s;
+    }
+    .throttle-label {
+      position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+      color: #888; font-size: 11px;
+    }
+    
+    /* Controls Help */
     .controls {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.85); color: #888; padding: 10px 20px;
       border-radius: 20px; z-index: 100; font-size: 12px;
     }
-    .pfd {
-      position: fixed; bottom: 20px; right: 20px;
-      width: 180px; height: 180px;
-      background: rgba(0,20,0,0.9); border: 2px solid #00ff88; border-radius: 50%;
-      z-index: 100;
-    }
-    .pfd canvas { width: 100%; height: 100%; border-radius: 50%; }
+    
+    /* Touch Controls */
     .touch-left, .touch-right {
       position: fixed; bottom: 30px; width: 120px; height: 120px;
       background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3);
@@ -55,184 +84,690 @@
       background: rgba(0,255,0,0.5); border-radius: 50%;
       transform: translate(-50%, -50%);
     }
+    
     @media (pointer: coarse) {
-      .hud { top: 20px; left: 20px; right: auto; font-size: 12px; padding: 10px; min-width: 150px; }
-      .pfd { top: 20px; right: 20px; bottom: auto; width: 100px !important; height: 100px !important; }
-      .pfd canvas { width: 100px !important; height: 100px !important; }
-      .touch-left, .touch-right { display: block; width: 100px; height: 100px; }
-      .touch-left { bottom: 30px; left: 20px; }
-      .touch-right { bottom: 30px; right: 20px; }
-      .touch-knob { width: 40px; height: 40px; }
+      .hud { font-size: 11px; padding: 10px; min-width: 160px; }
+      .pfd { width: 120px; height: 120px; }
+      .touch-left, .touch-right { display: block; }
       .controls { display: none; }
-    }
-    @media (pointer: fine) {
-      .pfd { bottom: 20px; right: 20px; }
-      .hud { top: 20px; left: 20px; }
     }
   </style>
 </head>
 <body>
-  <div class="loading" id="loading">Flight Sim - Loading...</div>
+  <div class="loading" id="loading">Flight Sim - Initializing...</div>
   <div id="cesium-container"></div>
   
   <div class="hud">
+    <div class="hud-title">✈️ A380 FLIGHT DATA</div>
     <div>FPS: <span id="fps">--</span></div>
     <div>POS: <span id="pos">--</span></div>
     <div>HDG: <span id="hdg">--</span>°</div>
-    <div>ALT: <span id="alt">--</span></div>
-    <div>SPD: <span id="spd">--</span></div>
-    <div>V/S: <span id="vs">--</span></div>
-    <div>THR: <span id="thr">--</span>%</div>
+    <div>ALT: <span id="alt">--</span> ft</div>
+    <div>SPD: <span id="spd">--</span> kts</div>
+    <div>V/S: <span id="vs">--</span> fpm</div>
+    <div>AOA: <span id="aoa">--</span>°</div>
+    <div>FLAPS: <span id="flaps">0</span>°</div>
+    <div>GEAR: <span id="gear">UP</span></div>
     <div style="color:#888;margin-top:8px">MODE: <span id="mode">KEY</span></div>
   </div>
   
-  <div class="pfd"><canvas id="pfd-canvas" width="180" height="180"></canvas></div>
+  <div class="throttle-bar">
+    <div class="throttle-label">THR</div>
+    <div class="throttle-fill" id="throttle-fill"></div>
+  </div>
+  
+  <div class="pfd"><canvas id="pfd-canvas" width="240" height="240"></canvas></div>
   
   <div class="touch-left" id="touch-left"><div class="touch-knob" id="knob-left"></div></div>
   <div class="touch-right" id="touch-right"><div class="touch-knob" id="knob-right"></div></div>
   
-  <div class="controls">W/S=Thr | A/D=Roll | Arrows=Pitch/Turn | Q/E=Throttle</div>
+  <div class="controls">
+    W/S=Pitch | A/D=Roll | Q/E=Throttle | F=Flaps | G=Gear | R=Reset
+  </div>
 
   <script>
-    const CESIUM_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZTVkZWJkZC1lMDdlLTQyYzMtYWIyNS01YmUzZTc4Y2JmMGIiLCJpZCI6MzkyOTEzLCJpYXQiOjE3NzE3MzAzNjh9.lNWe3qqelAGSjQAMwJv8jrHbdxKFmFYq7UB80y4O6CU';
+    // ============================================
+    // MSFS-STYLE A380 FLIGHT MODEL
+    // ============================================
     
-    const A380 = { mass: 276800, wingArea: 845, maxThrust: 1424000, maxRollRate: 14, maxPitchRate: 4.5, maxBank: 35, maxPitch: 20, stallSpeed: 70 };
+    // A380 Specifications (approximate real values)
+    const AIRCRAFT = {
+      name: 'A380',
+      mass: 276800,              // kg (MTOW)
+      emptyMass: 276800 - 150000, // kg
+      wingArea: 845,              // m²
+      maxThrust: 1424000,         // N (4x engines)
+      maxThrustPerEngine: 356000,
+      
+      // Speed limits
+      stallSpeed: 70,             // m/s (约136 kts)
+      vmo: 340,                  // max operating speed m/s
+      vne: 365,                  // never exceed m/s
+      
+      // Control limits
+      maxRollRate: 15,           // deg/s
+      maxPitchRate: 5,           // deg/s
+      maxBank: 35,               // degrees
+      maxPitch: 30,              // degrees
+      maxPitchUp: -15,           // degrees
+      
+      // Aerodynamics
+      CLmax: 2.5,                // max lift coefficient (with flaps)
+      CLmaxClean: 1.6,           // max lift coefficient (clean)
+      CD0: 0.02,                 // parasite drag coefficient
+      k: 0.04,                   // induced drag factor
+    };
     
-    const state = { lon: 103.9915, lat: 1.3644, alt: 500, heading: 90, pitch: 0, roll: 0, speed: 150, throttle: 0.5, verticalSpeed: 0 };
-    const controls = { aileron: 0, elevator: 0, targetAileron: 0, targetElevator: 0 };
-    const CONTROL_LAG = 3.0;
+    // Engine model
+    const ENGINES = {
+      N1: [0, 0, 0, 0],          // N1 percentage
+      N2: [0, 0, 0, 0],          // N2 percentage
+      thrust: [0, 0, 0, 0],      // actual thrust per engine
+      spoolTime: 3,              // seconds to spool up
+      
+      update(dt, throttle) {
+        const targetN1 = throttle * 100;
+        const spoolRate = 100 / this.spoolTime;
+        for (let i = 0; i < 4; i++) {
+          if (this.N1[i] < targetN1) {
+            this.N1[i] = Math.min(targetN1, this.N1[i] + spoolRate * dt);
+          } else {
+            this.N1[i] = Math.max(targetN1, this.N1[i] - spoolRate * dt * 0.5);
+          }
+          this.N2[i] = this.N1[i] * 1.05;
+          // Thrust with temperature/altitude derating (simplified)
+          const altFactor = Math.max(0.3, 1 - state.alt / 50000);
+          this.thrust[i] = (this.N1[i] / 100) * AIRCRAFT.maxThrustPerEngine * altFactor;
+        }
+      },
+      
+      getTotalThrust() {
+        return this.thrust.reduce((a, b) => a + b, 0);
+      }
+    };
     
+    // Flight state
+    const state = {
+      // Position
+      lon: 103.9915,
+      lat: 1.3644,
+      alt: 5000,        // feet (MSFS uses feet)
+      
+      // Orientation (radians internally, degrees for display)
+      heading: 90,      // degrees
+      pitch: 0,         // degrees
+      roll: 0,         // degrees
+      
+      // Motion
+      speed: 180,       // knots
+      verticalSpeed: 0,// fpm
+      
+      // Derived
+      aoa: 0,           // angle of attack
+      mach: 0,
+      q: 0,             // dynamic pressure
+      
+      // Controls
+      throttle: 0.5,
+      aileron: 0,
+      elevator: 0,
+      rudder: 0,
+      flaps: 0,        // 0, 1, 2, 3, 4
+      gear: true,      // true = up (retracted)
+      
+      // Control lag
+      targetAileron: 0,
+      targetElevator: 0,
+      CONTROL_LAG: 2.0,
+    };
+    
+    // Input state
     const keys = {};
     let controlMode = 'KEY';
+    let touchState = { left: {x:0, y:0}, right: {x:0, y:0} };
     
-    document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'KeyQ') state.throttle = Math.min(1, state.throttle + 0.02); if (e.code === 'KeyE') state.throttle = Math.max(0, state.throttle - 0.02); });
+    // ============================================
+    // INPUT HANDLING
+    // ============================================
+    
+    document.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      
+      // Throttle (Q = increase, E = decrease)
+      if (e.code === 'KeyQ') {
+        state.throttle = Math.min(1.0, state.throttle + 0.02);
+      }
+      if (e.code === 'KeyE') {
+        state.throttle = Math.max(0, state.throttle - 0.02);
+      }
+      
+      // Flaps (F = cycle)
+      if (e.code === 'KeyF') {
+        const flapAngles = [0, 1, 2, 3, 4];
+        const idx = flapAngles.indexOf(state.flaps);
+        state.flaps = flapAngles[(idx + 1) % flapAngles.length];
+      }
+      
+      // Gear (G = toggle)
+      if (e.code === 'KeyG') {
+        state.gear = !state.gear;
+      }
+      
+      // Reset (R)
+      if (e.code === 'KeyR') {
+        resetFlight();
+      }
+    });
+    
     document.addEventListener('keyup', e => keys[e.code] = false);
     
     window.addEventListener('gamepadconnected', () => controlMode = 'GAMEPAD');
     window.addEventListener('gamepaddisconnected', () => controlMode = 'KEY');
     
-    const touchState = { left: {x:0,y:0}, right: {x:0,y:0} };
+    // Touch controls
     function setupTouch() {
-      const left = document.getElementById('touch-left'), right = document.getElementById('touch-right');
-      const kLeft = document.getElementById('knob-left'), kRight = document.getElementById('knob-right');
+      const left = document.getElementById('touch-left');
+      const right = document.getElementById('touch-right');
+      const kLeft = document.getElementById('knob-left');
+      const kRight = document.getElementById('knob-right');
       let leftId, rightId;
-      left.addEventListener('touchstart', e => { leftId = e.changedTouches[0].identifier; controlMode = 'TOUCH'; });
-      left.addEventListener('touchmove', e => { for (let t of e.changedTouches) if (t.identifier === leftId) { const r = left.getBoundingClientRect(); touchState.left.x = Math.max(-1, Math.min(1, (t.clientX - r.left - 60) / 40)); touchState.left.y = Math.max(-1, Math.min(1, (t.clientY - r.top - 60) / 40)); kLeft.style.transform = 'translate(calc(-50% + ' + (touchState.left.x*25) + 'px), calc(-50% + ' + (touchState.left.y*25) + 'px))'; } });
-      left.addEventListener('touchend', e => { for (let t of e.changedTouches) if (t.identifier === leftId) { touchState.left = {x:0,y:0}; kLeft.style.transform = 'translate(-50%,-50%)'; } });
-      right.addEventListener('touchstart', e => { rightId = e.changedTouches[0].identifier; controlMode = 'TOUCH'; });
-      right.addEventListener('touchmove', e => { for (let t of e.changedTouches) if (t.identifier === rightId) { const r = right.getBoundingClientRect(); touchState.right.x = Math.max(-1, Math.min(1, (t.clientX - r.left - 60) / 40)); touchState.right.y = Math.max(-1, Math.min(1, (t.clientY - r.top - 60) / 40)); kRight.style.transform = 'translate(calc(-50% + ' + (touchState.right.x*25) + 'px), calc(-50% + ' + (touchState.right.y*25) + 'px))'; } });
-      right.addEventListener('touchend', e => { for (let t of e.changedTouches) if (t.identifier === rightId) { touchState.right = {x:0,y:0}; kRight.style.transform = 'translate(-50%,-50%)'; } });
+      
+      left.addEventListener('touchstart', e => {
+        leftId = e.changedTouches[0].identifier;
+        controlMode = 'TOUCH';
+      });
+      left.addEventListener('touchmove', e => {
+        for (let t of e.changedTouches) if (t.identifier === leftId) {
+          const r = left.getBoundingClientRect();
+          touchState.left.x = Math.max(-1, Math.min(1, (t.clientX - r.left - 60) / 40));
+          touchState.left.y = Math.max(-1, Math.min(1, (t.clientY - r.top - 60) / 40));
+          kLeft.style.transform = `translate(calc(-50% + ${touchState.left.x*25}px), calc(-50% + ${touchState.left.y*25}px))`;
+        }
+      });
+      left.addEventListener('touchend', e => {
+        for (let t of e.changedTouches) if (t.identifier === leftId) {
+          touchState.left = {x:0, y:0};
+          kLeft.style.transform = 'translate(-50%,-50%)';
+        }
+      });
+      
+      right.addEventListener('touchstart', e => {
+        rightId = e.changedTouches[0].identifier;
+        controlMode = 'TOUCH';
+      });
+      right.addEventListener('touchmove', e => {
+        for (let t of e.changedTouches) if (t.identifier === rightId) {
+          const r = right.getBoundingClientRect();
+          touchState.right.x = Math.max(-1, Math.min(1, (t.clientX - r.left - 60) / 40));
+          touchState.right.y = Math.max(-1, Math.min(1, (t.clientY - r.top - 60) / 40));
+          kRight.style.transform = `translate(calc(-50% + ${touchState.right.x*25}px), calc(-50% + ${touchState.right.y*25}px))`;
+        }
+      });
+      right.addEventListener('touchend', e => {
+        for (let t of e.changedTouches) if (t.identifier === rightId) {
+          touchState.right = {x:0, y:0};
+          kRight.style.transform = 'translate(-50%,-50%)';
+        }
+      });
     }
     setupTouch();
     
-    let frameCount = 0, lastFpsTime = performance.now();
+    function resetFlight() {
+      state.lon = 103.9915;
+      state.lat = 1.3644;
+      state.alt = 5000;
+      state.heading = 90;
+      state.pitch = 0;
+      state.roll = 0;
+      state.speed = 180;
+      state.throttle = 0.5;
+      state.verticalSpeed = 0;
+    }
     
-    function update(dt) {
-      controls.targetAileron = 0;
-      controls.targetElevator = 0;
+    // ============================================
+    // FLIGHT PHYSICS (MSFS-STYLE)
+    // ============================================
+    
+    function updateFlightPhysics(dt) {
+      // Process control inputs
+      state.targetAileron = 0;
+      state.targetElevator = 0;
       
-      if (keys['KeyA'] || keys['ArrowLeft']) controls.targetAileron = -1;
-      if (keys['KeyD'] || keys['ArrowRight']) controls.targetAileron = 1;
-      if (keys['KeyW'] || keys['ArrowUp']) controls.targetElevator = -1;
-      if (keys['KeyS'] || keys['ArrowDown']) controls.targetElevator = 1;
+      if (keys['KeyA'] || keys['ArrowLeft']) state.targetAileron = -1;
+      if (keys['KeyD'] || keys['ArrowRight']) state.targetAileron = 1;
+      if (keys['KeyW'] || keys['ArrowUp']) state.targetElevator = -1;
+      if (keys['KeyS'] || keys['ArrowDown']) state.targetElevator = 1;
       
-      const smoothing = 1 - Math.exp(-dt * CONTROL_LAG);
-      controls.aileron += (controls.targetAileron - controls.aileron) * smoothing;
-      controls.elevator += (controls.targetElevator - controls.elevator) * smoothing;
-      
-      const speedFactor = Math.min(1, Math.max(0.1, (state.speed - A380.stallSpeed) / 100));
-      
-      const rollRate = controls.aileron * A380.maxRollRate * speedFactor;
-      state.roll += rollRate * dt * Math.PI / 180;
-      state.roll = Math.max(-A380.maxBank * Math.PI / 180, Math.min(A380.maxBank * Math.PI / 180, state.roll));
-      
-      const pitchRate = controls.elevator * A380.maxPitchRate * speedFactor;
-      state.pitch += pitchRate * dt * Math.PI / 180;
-      state.pitch = Math.max(-A380.maxPitch * Math.PI / 180, Math.min(A380.maxPitch * Math.PI / 180, state.pitch));
-      
-      if (state.speed > A380.stallSpeed) {
-        const bankAngle = state.roll;
-        const turnRateFromBank = (9.81 * Math.tan(bankAngle)) / state.speed;
-        state.heading += turnRateFromBank * 180 / Math.PI * dt;
+      // Touch controls override
+      if (controlMode === 'TOUCH') {
+        state.targetAileron = touchState.left.x;
+        state.targetElevator = touchState.left.y;
+        // Right stick for throttle
+        state.throttle = Math.max(0, Math.min(1, 0.5 - touchState.right.y * 0.5));
       }
       
-      const thrust = state.throttle * A380.maxThrust;
-      const drag = 0.015 * state.speed * state.speed;
-      const acceleration = (thrust - drag) / A380.mass;
-      state.speed += acceleration * dt;
-      state.speed = Math.max(A380.stallSpeed / 2, Math.min(350, state.speed));
+      // Control surface lag (hydraulic simulation)
+      const smoothing = 1 - Math.exp(-dt * state.CONTROL_LAG);
+      state.aileron += (state.targetAileron - state.aileron) * smoothing;
+      state.elevator += (state.targetElevator - state.elevator) * smoothing;
       
-      const verticalFromPitch = state.speed * Math.sin(state.pitch);
-      const verticalFromThrust = (state.throttle - 0.5) * 30;
-      state.verticalSpeed = verticalFromPitch + verticalFromThrust;
-      state.alt += state.verticalSpeed * dt;
+      // Convert speed to m/s for calculations
+      const speedMps = state.speed * 0.514444;
+      const altMeters = state.alt * 0.3048;
+      
+      // Air density (simplified ISA model)
+      const rho = 1.225 * Math.exp(-altMeters / 8500);
+      
+      // Dynamic pressure: q = 0.5 * rho * V²
+      state.q = 0.5 * rho * speedMps * speedMps;
+      
+      // ============================================
+      // LIFT CALCULATION
+      // ============================================
+      
+      // Angle of Attack
+      const aoaFactor = state.elevator * 15; // elevator affects pitch/trim
+      state.aoa = Math.max(-5, Math.min(25, state.pitch - speedMps * 0.1 + aoaFactor));
+      
+      // Lift coefficient based on AoA and flaps
+      let CLmax = AIRCRAFT.CLmaxClean;
+      if (state.flaps > 0) CLmax = AIRCRAFT.CLmax + state.flaps * 0.15;
+      if (state.gear) CLmax -= 0.2;
+      
+      // Lift curve (simplified)
+      let CL = 0;
+      if (state.aoa < 15) {
+        CL = state.aoa * (CLmax / 15);
+      } else {
+        // Stall region
+        CL = CLmax * Math.exp(-(state.aoa - 15) / 8);
+      }
+      
+      // Ground effect (increases lift near ground)
+      if (altMeters < 100) {
+        CL *= 1 + (1 - altMeters / 100) * 0.5;
+      }
+      
+      // Lift force: L = 0.5 * rho * V² * S * CL
+      const lift = 0.5 * rho * speedMps * speedMps * AIRCRAFT.wingArea * CL;
+      
+      // ============================================
+      // DRAG CALCULATION
+      // ============================================
+      
+      // Parasite drag
+      let CD = AIRCRAFT.CD0;
+      // Flaps drag
+      CD += state.flaps * 0.02;
+      // Gear drag
+      if (state.gear) CD += 0.1;
+      // Induced drag: CDi = k * CL²
+      CD += AIRCRAFT.k * CL * CL;
+      
+      // Drag force: D = 0.5 * rho * V² * S * CD
+      const drag = 0.5 * rho * speedMps * speedMps * AIRCRAFT.wingArea * CD;
+      
+      // ============================================
+      // THRUST
+      // ============================================
+      
+      ENGINES.update(dt, state.throttle);
+      const thrust = ENGINES.getTotalThrust();
+      
+      // ============================================
+      // FORCES & ACCELERATION
+      // ============================================
+      
+      // Weight
+      const weight = AIRCRAFT.mass * 9.81;
+      
+      // Net forces
+      const liftForce = lift;
+      const dragForce = drag;
+      
+      // Thrust component (forward)
+      const thrustForward = thrust * Math.cos(state.pitch * Math.PI / 180);
+      
+      // Acceleration
+      const acceleration = (thrustForward - dragForce) / AIRCRAFT.mass;
+      
+      // Update speed (m/s -> knots)
+      state.speed += acceleration * dt * 1.94384;
+      state.speed = Math.max(AIRCRAFT.stallSpeed * 1.2, Math.min(AIRCRAFT.vmo, state.speed));
+      
+      // Vertical forces
+      const weightComponent = weight * Math.cos(state.roll * Math.PI / 180);
+      const liftComponent = liftForce * Math.cos(state.roll * Math.PI / 180);
+      const verticalAccel = (liftComponent - weightComponent) / AIRCRAFT.mass;
+      
+      // Update altitude (m/s -> fpm)
+      const verticalMps = verticalAccel * dt + speedMps * Math.sin(state.pitch * Math.PI / 180);
+      state.verticalSpeed = verticalMps * 196.85;
+      state.alt += state.verticalSpeed * dt / 60;
       state.alt = Math.max(50, state.alt);
       
+      // ============================================
+      // ROTATION (Pitch, Roll, Yaw)
+      // ============================================
+      
+      // Speed effect on control authority
+      const speedFactor = Math.min(1, Math.max(0.1, (state.speed - AIRCRAFT.stallSpeed) / 100));
+      
+      // Roll
+      const rollRate = state.aileron * AIRCRAFT.maxRollRate * speedFactor;
+      state.roll += rollRate * dt;
+      state.roll = Math.max(-AIRCRAFT.maxBank, Math.min(AIRCRAFT.maxBank, state.roll));
+      
+      // Pitch
+      const pitchRate = state.elevator * AIRCRAFT.maxPitchRate * speedFactor;
+      state.pitch += pitchRate * dt;
+      state.pitch = Math.max(AIRCRAFT.maxPitchUp, Math.min(AIRCRAFT.maxPitch, state.pitch));
+      
+      // Turn from bank angle (coordinated turn)
+      if (state.speed > AIRCRAFT.stallSpeed && Math.abs(state.roll) > 1) {
+        const bankRad = state.roll * Math.PI / 180;
+        const turnRate = (9.81 * Math.tan(bankRad)) / speedMps;
+        state.heading += turnRate * dt * 180 / Math.PI;
+      }
+      
+      // Yaw (rudder for coordination - simplified)
+      const yawFromRoll = state.roll * 0.02;
+      state.heading += yawFromRoll * dt;
+      
+      // Normalize heading
+      state.heading = ((state.heading % 360) + 360) % 360;
+      
+      // ============================================
+      // POSITION UPDATE
+      // ============================================
+      
       const headingRad = state.heading * Math.PI / 180;
-      const groundSpeed = state.speed * Math.cos(state.pitch);
-      const speedDeg = groundSpeed / 111320;
+      const speedKnots = state.speed;
+      const speedDeg = speedKnots / 3600; // degrees per second
       
       state.lon += Math.sin(headingRad) * speedDeg * dt;
       state.lat += Math.cos(headingRad) * speedDeg * dt;
       
-      document.getElementById('pos').textContent = state.lon.toFixed(4) + ',' + state.lat.toFixed(4) + ',' + state.alt.toFixed(0) + 'm';
-      document.getElementById('hdg').textContent = ((state.heading % 360 + 360) % 360).toFixed(0) + '°';
-      document.getElementById('spd').textContent = state.speed.toFixed(0) + ' m/s';
-      document.getElementById('alt').textContent = state.alt.toFixed(0) + ' m';
-      document.getElementById('vs').textContent = (state.verticalSpeed > 0 ? '+' : '') + state.verticalSpeed.toFixed(0) + ' m/s';
-      document.getElementById('thr').textContent = (state.throttle * 100).toFixed(0);
+      // ============================================
+      // MACH NUMBER
+      // ============================================
+      
+      const speedMph = state.speed * 1.15078;
+      const speedOfSound = 661.5 * Math.sqrt(1 - 0.000006875 * altMeters);
+      state.mach = speedMph / speedOfSound;
+    }
+    
+    // ============================================
+    // HUD UPDATE
+    // ============================================
+    
+    function updateHUD() {
+      document.getElementById('pos').textContent = 
+        `${state.lon.toFixed(4)}, ${state.lat.toFixed(4)}`;
+      document.getElementById('hdg').textContent = state.heading.toFixed(0);
+      document.getElementById('alt').textContent = state.alt.toFixed(0);
+      document.getElementById('spd').textContent = state.speed.toFixed(0);
+      document.getElementById('vs').textContent = (state.verticalSpeed > 0 ? '+' : '') + state.verticalSpeed.toFixed(0);
+      document.getElementById('aoa').textContent = state.aoa.toFixed(1);
+      document.getElementById('flaps').textContent = state.flaps;
+      document.getElementById('gear').textContent = state.gear ? 'DN' : 'UP';
       document.getElementById('mode').textContent = controlMode;
       
-      frameCount++;
-      const now = performance.now();
-      if (now - lastFpsTime >= 1000) { document.getElementById('fps').textContent = frameCount; frameCount = 0; lastFpsTime = now; }
+      // Throttle bar
+      document.getElementById('throttle-fill').style.height = (state.throttle * 100) + '%';
+      
+      // Stall warning
+      const altEl = document.getElementById('alt');
+      const spdEl = document.getElementById('spd');
+      if (state.aoa > 12 || state.speed < AIRCRAFT.stallSpeed * 1.3) {
+        altEl.classList.add('warning');
+        spdEl.classList.add('warning');
+      } else {
+        altEl.classList.remove('warning');
+        spdEl.classList.remove('warning');
+      }
     }
+    
+    // ============================================
+    // PFD (Primary Flight Display)
+    // ============================================
     
     function drawPFD() {
-      const c = document.getElementById('pfd-canvas');
-      const ctx = c.getContext('2d');
-      const w = 180, h = 180, cx = w/2, cy = h/2;
+      const canvas = document.getElementById('pfd-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = 240, h = 240, cx = w/2, cy = h/2;
+      
+      // Background
       ctx.fillStyle = '#001a00';
-      ctx.fillRect(0,0,w,h);
-      const pitchScale = 3;
+      ctx.fillRect(0, 0, w, h);
+      
+      const pitchScale = 4;
+      const rollScale = 1;
+      
+      // Sky/Ground indication
+      ctx.fillStyle = '#003300';
+      ctx.fillRect(0, 0, w, cy);
+      ctx.fillStyle = '#332200';
+      ctx.fillRect(0, cy, w, cy);
+      
+      // Pitch ladder
       ctx.strokeStyle = '#00ff88';
       ctx.lineWidth = 1;
-      for (let p = -90; p <= 90; p += 10) {
-        const y = cy - (state.pitch * 180 / Math.PI - p) * pitchScale;
-        if (y > 10 && y < h-10) { const lw = p === 0 ? 50 : p % 30 === 0 ? 35 : 20; ctx.beginPath(); ctx.moveTo(cx-lw,y); ctx.lineTo(cx+lw,y); ctx.stroke(); }
-      }
-      ctx.save(); ctx.translate(cx,25); ctx.rotate(-state.roll);
-      ctx.fillStyle = '#00ff88'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-10,-12); ctx.lineTo(10,-12); ctx.closePath(); ctx.fill(); ctx.restore();
-      ctx.fillStyle = '#ff0';
-      ctx.beginPath(); ctx.moveTo(cx-15,cy); ctx.lineTo(cx+15,cy); ctx.lineTo(cx,cy-10); ctx.lineTo(cx,cy+10); ctx.fill();
-      ctx.fillStyle = '#00ff88';
-      ctx.font = '12px monospace';
+      ctx.font = '10px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(((state.heading % 360 + 360) % 360).toFixed(0) + '°', cx, h-10);
+      
+      for (let p = -90; p <= 90; p += 10) {
+        const y = cy - (state.pitch - p) * pitchScale;
+        if (y > 20 && y < h - 20) {
+          const lineWidth = p === 0 ? 60 : (p % 30 === 0 ? 40 : 25);
+          ctx.beginPath();
+          ctx.moveTo(cx - lineWidth, y);
+          ctx.lineTo(cx + lineWidth, y);
+          ctx.stroke();
+          if (p % 30 === 0) {
+            ctx.fillStyle = '#00ff88';
+            ctx.fillText(p > 0 ? `+${p}` : p.toString(), cx + lineWidth + 15, y + 3);
+          }
+        }
+      }
+      
+      // Bank angle indicator
+      ctx.save();
+      ctx.translate(cx, 30);
+      ctx.rotate(-state.roll * Math.PI / 180 * rollScale);
+      
+      // Bank pointer
+      ctx.fillStyle = '#00ff88';
+      ctx.beginPath();
+      ctx.moveTo(0, -5);
+      ctx.lineTo(-8, 10);
+      ctx.lineTo(8, 10);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Bank scale
+      ctx.strokeStyle = '#00ff88';
+      ctx.lineWidth = 2;
+      for (let angle of [-60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60]) {
+        const rad = angle * Math.PI / 180;
+        const x1 = Math.sin(rad) * 25;
+        const y1 = -Math.cos(rad) * 25;
+        const x2 = Math.sin(rad) * 35;
+        const y2 = -Math.cos(rad) * 35;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+      ctx.restore();
+      
+      // Heading
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(state.heading.toFixed(0) + '°', cx, h - 15);
+      
+      // Flight path marker (aircraft symbol)
+      ctx.save();
+      ctx.translate(cx, cy);
+      
+      // Wings
+      ctx.strokeStyle = '#ffcc00';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-40, 0);
+      ctx.lineTo(-15, 0);
+      ctx.lineTo(-10, 8);
+      ctx.moveTo(40, 0);
+      ctx.lineTo(15, 0);
+      ctx.lineTo(10, 8);
+      ctx.stroke();
+      
+      // Nose
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(-6, 0);
+      ctx.lineTo(6, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     }
     
+    // ============================================
+    // CESIUM 3D RENDERER
+    // ============================================
+    
+    let viewer;
+    let aircraft;
+    
     async function init() {
-      Cesium.Ion.defaultAccessToken = CESIUM_TOKEN;
+      Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZTVkZWJkZC1lMDdlLTQyYzMtYWIyNS01YmUzZTc4Y2JmMGIiLCJpZCI6MzkyOTEzLCJpYXQiOjE3NzE3MzAzNjh9.lNWe3qqelAGSjQAMwJv8jrHbdxKFmFYq7UB80y4O6CU';
+      
       document.body.style.margin = '0';
-      const viewer = new Cesium.Viewer('cesium-container', { terrainProvider: await Cesium.createWorldTerrainAsync(), baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false, selectionIndicator: false, timeline: false, animation: false, navigationHelpButton: false, fullscreenButton: false, infoBox: false, shouldAnimate: false });
-      const aircraft = viewer.entities.add({ position: Cesium.Cartesian3.fromDegrees(state.lon, state.lat, state.alt), model: { uri: 'https://cesium.com/public/Sandcastle/SampleData/models/CesiumAir/Cesium_Air.glb', scale: 50 }, label: { text: '✈️ A380', font: '24px sans-serif', fillColor: Cesium.Color.YELLOW, pixelOffset: new Cesium.Cartesian2(0,-60) }, point: { pixelSize: 15, color: Cesium.Color.RED } });
-      viewer.entities.add({ position: Cesium.Cartesian3.fromDegrees(103.9915, 1.3644, 0), point: { pixelSize: 12, color: Cesium.Color.CYAN }, label: { text: '🛫 Singapore', font: '16px sans-serif' } });
+      
+      viewer = new Cesium.Viewer('cesium-container', {
+        terrainProvider: await Cesium.createWorldTerrainAsync(),
+        baseLayerPicker: false,
+        geocoder: false,
+        homeButton: false,
+        sceneModePicker: false,
+        selectionIndicator: false,
+        timeline: false,
+        animation: false,
+        navigationHelpButton: false,
+        fullscreenButton: false,
+        infoBox: false,
+        shouldAnimate: false
+      });
+      
+      // Add aircraft with better model
+      // Using a more prominent aircraft model
+      aircraft = viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(state.lon, state.lat, state.alt * 0.3048),
+        model: {
+          // Using Cesium's aircraft - scaled larger for visibility
+          uri: 'https://cesium.com/public/Sandcastle/SampleData/models/CesiumAir/Cesium_Air.glb',
+          scale: 80,
+          minimumPixelSize: 64
+        },
+        label: {
+          text: 'A380',
+          font: 'bold 16px sans-serif',
+          fillColor: Cesium.Color.YELLOW,
+          pixelOffset: new Cesium.Cartesian2(0, -80),
+          showBackground: true,
+          backgroundColor: new Cesium.Color(0, 0, 0, 0.7)
+        },
+        // Add a point for visibility
+        point: {
+          pixelSize: 20,
+          color: Cesium.Color.RED,
+          outlineColor: Cesium.Color.WHITE,
+          outlineWidth: 2
+        }
+      });
+      
+      // Airport marker
+      viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(103.9915, 1.3644, 0),
+        point: {
+          pixelSize: 15,
+          color: Cesium.Color.CYAN
+        },
+        label: {
+          text: '🛫 Singapore Changi',
+          font: '14px sans-serif',
+          fillColor: Cesium.Color.CYAN,
+          pixelOffset: new Cesium.Cartesian2(0, -25)
+        }
+      });
+      
       document.getElementById('loading').classList.add('hidden');
-      let last = performance.now();
+      
+      // Main loop
+      let lastTime = performance.now();
+      let frameCount = 0;
+      let fpsTime = 0;
+      
       function loop() {
         const now = performance.now();
-        const dt = Math.min((now - last) / 1000, 0.1);
-        last = now;
-        update(dt);
-        aircraft.position = Cesium.Cartesian3.fromDegrees(state.lon, state.lat, state.alt);
-        aircraft.orientation = Cesium.Transforms.headingPitchRollQuaternion(Cesium.Cartesian3.fromDegrees(state.lon, state.lat, state.alt), new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(state.heading), state.pitch, state.roll));
-        const h = state.heading * Math.PI/180;
-        viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(state.lon - Math.sin(h)*0.02, state.lat - Math.cos(h)*0.02, state.alt + 300), orientation: { heading: Cesium.Math.toRadians(state.heading), pitch: Cesium.Math.toRadians(-15 + state.pitch * 30), roll: state.roll * 0.5 } });
+        const dt = Math.min((now - lastTime) / 1000, 0.1);
+        lastTime = now;
+        
+        // FPS counter
+        frameCount++;
+        fpsTime += dt;
+        if (fpsTime >= 1) {
+          document.getElementById('fps').textContent = frameCount;
+          frameCount = 0;
+          fpsTime = 0;
+        }
+        
+        // Update physics
+        updateFlightPhysics(dt);
+        
+        // Update 3D model position
+        const altMeters = state.alt * 0.3048;
+        aircraft.position = Cesium.Cartesian3.fromDegrees(state.lon, state.lat, altMeters);
+        
+        // Orientation (heading, pitch, roll)
+        const hpr = new Cesium.HeadingPitchRoll(
+          Cesium.Math.toRadians(state.heading),
+          Cesium.Math.toRadians(state.pitch),
+          Cesium.Math.toRadians(state.roll)
+        );
+        aircraft.orientation = Cesium.Transforms.headingPitchRollQuaternion(
+          aircraft.position,
+          hpr
+        );
+        
+        // Camera follow (third-person chase view)
+        const headingRad = state.heading * Math.PI / 180;
+        const camDist = 500; // meters behind
+        const camAlt = 150;  // meters above
+        
+        const camLon = state.lon - Math.sin(headingRad) * camDist / 111320;
+        const camLat = state.lat - Math.cos(headingRad) * camDist / 111320;
+        
+        viewer.camera.setView({
+          destination: Cesium.Cartesian3.fromDegrees(camLon, camLat, altMeters + camAlt),
+          orientation: {
+            heading: Cesium.Math.toRadians(state.heading),
+            pitch: Cesium.Math.toRadians(-10 + state.pitch * 0.5),
+            roll: Cesium.Math.toRadians(state.roll * 0.3)
+          }
+        });
+        
+        // Update HUD and PFD
+        updateHUD();
         drawPFD();
+        
         requestAnimationFrame(loop);
       }
+      
       loop();
     }
+    
     init();
   </script>
 </body>
